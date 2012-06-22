@@ -2,19 +2,22 @@ require 'rally_rest_api'
 require 'date'
 require 'csv'
 
+def strip_tags(str)
+  str.gsub(/<[^>]*>/, '')
+end
 
 def write_description_and_tasks(folder, us) 
   description = us.description
   tasks = us.tasks.to_s
 
-  File.new(folder + '/' + us.formatted_i_d, 'w+').write("#{description}\n\n#{tasks}")
+  File.new(folder + '/' + us.formatted_i_d, 'w+').write(strip_tags("#{description}\n\n#{tasks}"))
 end
 
 def write_history(folder, us) 
 
   history = us.revision_history.revisions.inject("") { |str, rev| str += '\n' + rev.description }
 
-  File.new(folder + '/' + us.formatted_i_d, 'w+').write(history)
+  File.new(folder + '/' + us.formatted_i_d, 'w+').write(strip_tags(history))
 end
 
 def process_story(us, rows) 
@@ -45,7 +48,7 @@ project = rally.find(:project) {
 }.first
 
 results = rally.find(:hierarchicalrequirement) {
-#  equal :project, project
+  equal :project, project
   _or_ {
     equal :schedule_state, 'Signed-Off'
     equal :schedule_state, 'Accepted'
