@@ -25,8 +25,19 @@ def process_story(us, rows)
   history_folder = 'hist'
 
   execution_time = (DateTime.parse(us.accepted_date) - DateTime.parse(us.in_progress_date)).to_f
+  acceptance_criteria = us.description.to_s.scan("<LI>").size + us.description.to_s.scan("<li>").size 
+  qa_tasks = 0
+  unless us.tasks.nil?
+    i = 0
+    while i < us.tasks.size
+      qa_tasks += us.tasks[i].to_s.scan("test").size
+      qa_tasks += us.tasks[i].to_s.scan("verify").size
+      qa_tasks += us.tasks[i].to_s.scan("QA").size
+      i += 1
+    end
+  end
 
-  rows << [us.formatted_i_d, us.name, us.project, us.owner, us.in_progress_date, us.accepted_date, execution_time, us.defects ? us.defects.size : 0, us.tasks ? us.tasks.size : 0, us.plan_estimate ? us.plan_estimate : 0, us.package, us.task_estimate_total]
+  rows << [us.formatted_i_d, us.name, us.project, us.owner, us.in_progress_date, us.accepted_date, execution_time, us.defects ? us.defects.size : 0, us.tasks ? us.tasks.size : 0, us.plan_estimate ? us.plan_estimate : 0, us.package, us.task_estimate_total, acceptance_criteria, us.attachments ? us.attachments.size : 0, qa_tasks, us.test_cases ? us.test_cases.size : 0, us.description ? us.description.size : 0 ]
 
   write_description_and_tasks(story_description_folder, us)
   write_history(history_folder, us)
@@ -64,7 +75,7 @@ results.each do |us|
   end
   
   in_progress_date = us.in_progress_date if in_progress_date.empty?
-  
+  print "."
   if in_progress_date && us.accepted_date
     puts "------------Story:" + us.formatted_i_d
     puts "------------DATE: " + in_progress_date
@@ -76,7 +87,7 @@ results.each do |us|
   end
 end
 
-header = ['id', 'name', 'project', 'owner', 'start', 'end', 'execution_in_days', 'defects', 'tasks', 'plan_estimate', 'package', 'task_estimate_total']
+header = ['id', 'name', 'project', 'owner', 'start', 'end', 'execution_in_days', 'defects', 'tasks', 'plan_estimate', 'package', 'task_estimate_total', '# acceptance criteria', '# attachements', '# qa tasks', '# test cases', 'length of description' ]
 CSV.open("out.csv", "w") do |csv|
   csv << header
   rows.each {|row| csv << row}
